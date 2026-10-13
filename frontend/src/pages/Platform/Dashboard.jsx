@@ -13,8 +13,7 @@ import { useDashboard } from '../../context/DashboardContext';
 
 const PlatformAdminDashboard = () => {
   const { setActiveTab } = useDashboard();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { setActiveTab('overview'); return () => setActiveTab(''); }, []);
+  useEffect(() => { setActiveTab('overview'); return () => setActiveTab(''); }, [setActiveTab]);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeTours: 0,

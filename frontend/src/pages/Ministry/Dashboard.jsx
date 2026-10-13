@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FiUsers, FiHome, FiRefreshCw, FiCheck, FiX, FiFileText, FiActivity } from "react-icons/fi";
 import { ministryAPI } from "../../api/ministry";
 import { useDashboard } from '../../context/DashboardContext';
 
 const MinistryDashboard = () => {
   const { activeTab, setActiveTab } = useDashboard();
-  useEffect(() => { setActiveTab(p => p || 'guides'); }, []);
+  useEffect(() => { setActiveTab(p => p || 'guides'); }, [setActiveTab]);
   const [guides, setGuides] = useState([]);
   const [agencies, setAgencies] = useState([]);
   const [verifications, setVerifications] = useState([]);
@@ -14,20 +14,20 @@ const MinistryDashboard = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState('');
 
-  const showSuccess = (msg) => {
+  const showSuccess = useCallback((msg) => {
     setSuccessMessage(msg);
     setError('');
     setTimeout(() => setSuccessMessage(''), 4000);
-  };
+  }, []);
 
-  const showError = (msg) => {
+  const showError = useCallback((msg) => {
     setError(msg);
     setSuccessMessage('');
     setTimeout(() => setError(''), 5000);
-  };
+  }, []);
 
   // Load all data
-  const loadAllData = async () => {
+  const loadAllData = useCallback(async () => {
     setLoading(true);
     try {
       // Load verification requests
@@ -63,12 +63,12 @@ const MinistryDashboard = () => {
       }
       setAgencies(Array.isArray(agenciesData) ? agenciesData : []);
 
-    } catch (error) {
+    } catch {
       showError('Failed to load dashboard data. Please try refreshing.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
 
   // Find verification status for a guide
   const getGuideVerificationStatus = (guide) => {
@@ -100,7 +100,7 @@ const MinistryDashboard = () => {
       });
       await loadAllData();
       showSuccess(`Guide ${guide.full_name || guide.email} approved successfully.`);
-    } catch (err) {
+    } catch {
       showError('Failed to approve guide. Please try again.');
     } finally {
       setProcessing(null);
@@ -122,7 +122,7 @@ const MinistryDashboard = () => {
       });
       await loadAllData();
       showSuccess(`Guide ${guide.full_name || guide.email} rejected.`);
-    } catch (err) {
+    } catch {
       showError('Failed to reject guide. Please try again.');
     } finally {
       setProcessing(null);
@@ -144,7 +144,7 @@ const MinistryDashboard = () => {
       });
       await loadAllData();
       showSuccess(`Agency ${agency.name} approved successfully.`);
-    } catch (err) {
+    } catch {
       showError('Failed to approve agency. Please try again.');
     } finally {
       setProcessing(null);
@@ -166,7 +166,7 @@ const MinistryDashboard = () => {
       });
       await loadAllData();
       showSuccess(`Agency ${agency.name} rejected.`);
-    } catch (err) {
+    } catch {
       showError('Failed to reject agency. Please try again.');
     } finally {
       setProcessing(null);
@@ -175,7 +175,7 @@ const MinistryDashboard = () => {
 
   useEffect(() => {
     loadAllData();
-  }, []);
+  }, [loadAllData]);
 
   if (loading) {
     return (

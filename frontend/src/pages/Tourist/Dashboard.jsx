@@ -22,7 +22,7 @@ import { useDashboard } from '../../context/DashboardContext';
 
 const Dashboard = () => {
   const { activeTab: activePage, setActiveTab: setActivePage } = useDashboard();
-  useEffect(() => { setActivePage(p => p || 'discover'); }, []);
+  useEffect(() => { setActivePage(p => p || 'discover'); }, [setActivePage]);
   const [user, setUser] = useState(null);
   const [tours, setTours] = useState([]);
   const [schedules, setSchedules] = useState([]);
@@ -197,11 +197,6 @@ const Dashboard = () => {
     fetchBookings();
   }, [activePage]);
 
-  // Get schedule for a specific tour
-  const getSchedulesForTour = (tourId) => {
-    return schedules.filter(schedule => schedule.tour === tourId);
-  };
-
   // Get tour for a specific schedule
   const getTourForSchedule = (schedule) => {
     return tours.find(tour => tour.id === schedule.tour);
@@ -318,7 +313,7 @@ const Dashboard = () => {
         number_of_people: bookingData.participants
       };
       
-      const response = await touristAPI.createBooking(bookingPayload);
+      await touristAPI.createBooking(bookingPayload);
       
       setSuccessMessage('Tour booked successfully!');
       setShowBookingModal(false);
@@ -365,7 +360,7 @@ const Dashboard = () => {
       setLoading(prev => ({ ...prev, reviewing: true }));
       setError(prev => ({ ...prev, reviewing: null }));
       
-      const response = await touristAPI.createReview({
+      await touristAPI.createReview({
         tour: selectedTour.id,
         rating: parseInt(reviewData.rating),
         comment: reviewData.comment
@@ -400,18 +395,6 @@ const Dashboard = () => {
       setError(prev => ({ ...prev, reviewing: errorMessage }));
     } finally {
       setLoading(prev => ({ ...prev, reviewing: false }));
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await touristAPI.logout();
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userData');
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Logout failed:', error);
     }
   };
 

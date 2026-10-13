@@ -32,7 +32,7 @@ import { useDashboard } from '../../context/DashboardContext';
 
 const AgencyOperatorDashboard = () => {
   const { activeTab, setActiveTab } = useDashboard();
-  useEffect(() => { setActiveTab(p => p || 'tour-management'); }, []);
+  useEffect(() => { setActiveTab(p => p || 'tour-management'); }, [setActiveTab]);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [selectedTour, setSelectedTour] = useState(null);
   const [selectedGuide, setSelectedGuide] = useState(null);
@@ -87,7 +87,8 @@ const AgencyOperatorDashboard = () => {
             await fetchAgencyTours();
             break;
           case "scheduled-tours":
-            await fetchScheduledTours();
+            // Tours are needed to show each schedule's guide and duration
+            await Promise.all([fetchScheduledTours(), fetchAgencyTours()]);
             break;
           case "booking-requests":
             await fetchBookingRequests();
@@ -678,7 +679,9 @@ const AgencyOperatorDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {scheduledTours.map(schedule => (
+        {scheduledTours.map(schedule => {
+          const tour = agencyTours.find(t => t.id === schedule.tour);
+          return (
           <div key={schedule.id} className="bg-white rounded-xl shadow-md p-5 border border-gray-200">
             <div className="flex justify-between items-start mb-3">
               <div>
@@ -687,9 +690,9 @@ const AgencyOperatorDashboard = () => {
                   <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
                     {schedule.date} at {schedule.start_time}
                   </span>
-                  {schedule.guide && (
+                  {tour?.guide && (
                     <span className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                      Guide: {offer.guide_name || "Unknown Guide"}
+                      Guide: {tour.guide_name || "Unknown Guide"}
                     </span>
                   )}
                 </div>
@@ -706,11 +709,12 @@ const AgencyOperatorDashboard = () => {
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <FiClock className="mr-2" />
-                <span>Duration: {schedule.tour?.duration_hours || 'N/A'} hours</span>
+                <span>Duration: {tour?.duration_hours || 'N/A'} hours</span>
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {scheduledTours.length === 0 && (

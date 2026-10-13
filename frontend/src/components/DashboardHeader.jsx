@@ -57,8 +57,9 @@ export default function DashboardHeader({ title }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const timerRef = useRef(null);
 
+  const userType = userData.user_type;
+
   useEffect(() => {
-    const userType = userData.user_type;
     if (!userType) return;
 
     const poll = async () => {
@@ -69,7 +70,7 @@ export default function DashboardHeader({ title }) {
     poll(); // immediate
     timerRef.current = setInterval(poll, POLL_INTERVAL_MS);
     return () => clearInterval(timerRef.current);
-  }, []);
+  }, [userType]);
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between

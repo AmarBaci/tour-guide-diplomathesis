@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { 
   FiUserPlus, 
   FiUsers, 
@@ -20,13 +20,12 @@ import { useDashboard } from '../../context/DashboardContext';
 
 const AgencyAdminDashboard = () => {
   const { activeTab, setActiveTab } = useDashboard();
-  useEffect(() => { setActiveTab(p => p || 'tours'); }, []);
+  useEffect(() => { setActiveTab(p => p || 'tours'); }, [setActiveTab]);
   const [tours, setTours] = useState([]);
   const [operators, setOperators] = useState([]);
   const [agencyInfo, setAgencyInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [userData, setUserData] = useState(null);
   const [agencyId, setAgencyId] = useState(null);
   const [showCreateTourModal, setShowCreateTourModal] = useState(false);
   const [showCreateOperatorModal, setShowCreateOperatorModal] = useState(false);
@@ -65,7 +64,6 @@ const AgencyAdminDashboard = () => {
         
         // Fallback: try to get agency ID from user data in localStorage
         const user = JSON.parse(localStorage.getItem("user"));
-        setUserData(user);
         
         if (user) {
           // Try different possible paths to agency ID
@@ -93,24 +91,8 @@ const AgencyAdminDashboard = () => {
     fetchUserData();
   }, []);
 
-  // Fetch data based on active tab
-  useEffect(() => {
-    switch (activeTab) {
-      case "tours":
-        fetchTours();
-        break;
-      case "operators":
-        fetchOperators();
-        break;
-      case "profile":
-        fetchAgencyProfile();
-        break;
-      default:
-        break;
-    }
-  }, [activeTab, agencyId]);
 
-  const fetchTours = async () => {
+  const fetchTours = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -135,9 +117,9 @@ const AgencyAdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchOperators = async () => {
+  const fetchOperators = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -163,9 +145,9 @@ const AgencyAdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchAgencyProfile = async () => {
+  const fetchAgencyProfile = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -173,17 +155,14 @@ const AgencyAdminDashboard = () => {
       
       let agencyData = null;
       
-      if (response.data) {
-        agencyData = response.data;
-        // Ensure we have the agency ID
-        if (agencyData.id && !agencyId) {
-          setAgencyId(agencyData.id);
-        }
-      } else if (response.data && response.data.agency) {
+      if (response.data && response.data.agency) {
         agencyData = response.data.agency;
-        if (agencyData.id && !agencyId) {
-          setAgencyId(agencyData.id);
-        }
+      } else if (response.data) {
+        agencyData = response.data;
+      }
+      // Keep the agency ID we already have, otherwise take it from the profile
+      if (agencyData && agencyData.id) {
+        setAgencyId(prev => prev || agencyData.id);
       }
       
       setAgencyInfo(agencyData);
@@ -194,7 +173,24 @@ const AgencyAdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Fetch data based on active tab
+  useEffect(() => {
+    switch (activeTab) {
+      case "tours":
+        fetchTours();
+        break;
+      case "operators":
+        fetchOperators();
+        break;
+      case "profile":
+        fetchAgencyProfile();
+        break;
+      default:
+        break;
+    }
+  }, [activeTab, agencyId, fetchTours, fetchOperators, fetchAgencyProfile]);
 
   const handleCreateOperator = async (e) => {
     e.preventDefault();
@@ -305,6 +301,19 @@ const AgencyAdminDashboard = () => {
       setTours(prev => prev.filter(t => t.id !== tourId));
     } catch (err) {
       setError('Failed to deactivate tour: ' + (err.response?.data?.detail || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTour = async (tourId) => {
+    if (!window.confirm('Permanently delete this tour? Its schedules and bookings will be deleted too. To just hide it from tourists, deactivate it instead.')) return;
+    try {
+      setLoading(true);
+      await agencyAPI.deleteTour(tourId);
+      setTours(prev => prev.filter(t => t.id !== tourId));
+    } catch (err) {
+      setError('Failed to delete tour: ' + (err.response?.data?.detail || err.message));
     } finally {
       setLoading(false);
     }

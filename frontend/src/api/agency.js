@@ -38,10 +38,13 @@ export const agencyAPI = {
 
   // Tour actions
   deactivateTour: (tourId) => {
-    return api.post(`/tours/${tourId}/deactivate/`);
+    return api.post(`/api/tours/${tourId}/deactivate/`);
+  },
+  deleteTour: (tourId) => {
+    return api.delete(`/api/tours/${tourId}/`);
   },
   assignGuideToTour: (tourId, guideId) => {
-    return api.post(`/tours/${tourId}/assign-guide/`, { guide: guideId });
+    return api.post(`/api/tours/${tourId}/assign_guide/`, { guide: guideId });
   },
 
   // Operator Management

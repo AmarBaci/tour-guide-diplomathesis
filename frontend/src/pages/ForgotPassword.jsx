@@ -23,7 +23,7 @@ export default function ForgotPassword() {
         'If an account with that email exists, a reset link has been sent. Check your inbox.'
       );
       toast.success('Reset link sent! Check your inbox.');
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.');
       toast.error('Something went wrong. Please try again.');
     } finally {

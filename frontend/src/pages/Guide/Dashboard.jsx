@@ -22,7 +22,7 @@ import { useDashboard } from '../../context/DashboardContext';
 
 const GuideDashboard = () => {
   const { activeTab, setActiveTab } = useDashboard();
-  useEffect(() => { setActiveTab(p => p || 'profile'); }, []);
+  useEffect(() => { setActiveTab(p => p || 'profile'); }, [setActiveTab]);
   const [profile, setProfile] = useState(null);
   const [availableTours, setAvailableTours] = useState([]);
   const [jobOffers, setJobOffers] = useState([]);
@@ -72,7 +72,7 @@ const GuideDashboard = () => {
       } else {
         setError("No profile data received");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to load profile data");
     } finally {
       setLoading(prev => ({ ...prev, profile: false }));
@@ -96,7 +96,7 @@ const GuideDashboard = () => {
       }
       
       setAvailableTours(Array.isArray(toursData) ? toursData : []);
-    } catch (err) {
+    } catch {
       setError("Failed to load available tours");
       setAvailableTours([]);
     } finally {
@@ -111,7 +111,7 @@ const GuideDashboard = () => {
       setError("");
       const response = await guideAPI.getJobOffers();
       setJobOffers(response.data.results || response.data || []);
-    } catch (err) {
+    } catch {
       setError("Failed to load job offers");
       setJobOffers([]);
     } finally {
@@ -165,7 +165,7 @@ const GuideDashboard = () => {
       setProfile(response.data);
       setIsEditing(false);
       setSuccessMessage("Profile updated successfully!");
-    } catch (err) {
+    } catch {
       setError("Failed to update profile");
     }
   };
@@ -193,7 +193,7 @@ const GuideDashboard = () => {
       // Refresh the offers list to get updated data
       await fetchJobOffers();
       setSuccessMessage(`Offer ${response} successfully!`);
-    } catch (err) {
+    } catch {
       setError("Failed to respond to offer");
     } finally {
       setLoading(prev => ({ ...prev, responding: false }));
@@ -209,26 +209,6 @@ const GuideDashboard = () => {
     } else if (activeTab === "offers") {
       fetchJobOffers();
     }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await guideAPI.logout();
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userData');
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
   };
 
   const renderProfile = () => {
